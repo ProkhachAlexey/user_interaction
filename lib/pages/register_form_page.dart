@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:user_interaction/model/user.dart';
+import 'package:user_interaction/pages/user_info_page.dart';
 
 class RegisterFormPage extends StatefulWidget {
   const RegisterFormPage({Key? key}) : super(key: key);
@@ -26,6 +28,8 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
   final _phoneFocus = FocusNode();
   final _passFocus = FocusNode();
   final _confirmPassFocus = FocusNode();
+
+  User newUser = User(name: '', phone: '', email: '', county: '', story: '');
 
   @override
   void dispose() {
@@ -71,11 +75,11 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
                 labelText: 'Full Name *',
                 hintText: 'What dp people call you?',
                 prefixIcon: const Icon(Icons.person),
-                suffixIcon: IconButton(
-                  onPressed: () {
-                    _nameController.text = '';
+                suffixIcon: GestureDetector(
+                  onTap: () {
+                    _nameController.clear();
                   },
-                  icon: const Icon(
+                  child: const Icon(
                     Icons.delete_outline,
                     color: Colors.red,
                   ),
@@ -90,6 +94,7 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
                 ),
               ),
               validator: _validateName,
+              onSaved: (value) => newUser.name = value!,
               // validator: (val) => val.isEmpty ? 'Name is required' : null,
             ),
             const SizedBox(
@@ -107,7 +112,7 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
                 prefixIcon: const Icon(Icons.phone),
                 suffixIcon: IconButton(
                   onPressed: () {
-                    _phoneController.text = '';
+                    _phoneController.clear();
                   },
                   icon: const Icon(
                     Icons.delete_outline,
@@ -132,6 +137,7 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
               validator: (val) => _validatePhoneNumber(val)
                   ? null
                   : 'Phone number must be entered as (###) ###-####',
+              onSaved: (value) => newUser.phone = value!,
             ),
             const SizedBox(
               height: 10,
@@ -162,6 +168,7 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
               ),
               keyboardType: TextInputType.emailAddress,
               validator: _validateEmail,
+              onSaved: (value) => newUser.email = value!,
             ),
             const SizedBox(
               height: 10,
@@ -178,10 +185,11 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
                   child: Text(country),
                 );
               }).toList(),
-              onChanged: (data) {
-                print(data);
+              onChanged: (country) {
+                print(country);
                 setState(() {
-                  _selectedCountry = data;
+                  _selectedCountry = country;
+                  newUser.county = country!;
                 });
               },
               value: _selectedCountry,
@@ -204,6 +212,7 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
               inputFormatters: [
                 LengthLimitingTextInputFormatter(100),
               ],
+              onSaved: (value) => newUser.story = value!,
             ),
             const SizedBox(
               height: 10,
@@ -254,7 +263,7 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
                   _formKey.currentState?.save();
-                  print('Form is valid');
+                  _showDialog(name: _nameController.text);
                   print('Name: ${_nameController.text}');
                   print('Phone: ${_phoneController.text}');
                   print('Email: ${_emailController.text}');
@@ -323,5 +332,42 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
     } else {
       return null;
     }
+  }
+
+  void _showDialog({required String name}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Registration successful',
+          style: TextStyle(color: Colors.green),
+        ),
+        content: Text(
+          '$name is now a verified register form.',
+          style: const TextStyle(
+            fontSize: 18.0,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => UserInfoPage(newUser)),
+              );
+            },
+            child: const Text(
+              'Verified',
+              style: TextStyle(
+                color: Colors.green,
+                fontSize: 18.0,
+              ),
+            ),
+          )
+        ],
+      ),
+    );
   }
 }
