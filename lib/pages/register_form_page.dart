@@ -19,6 +19,14 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
   final _passController = TextEditingController();
   final _confirmPassController = TextEditingController();
 
+  List<String> _countries = ['Russia', 'Ukraine', 'Germany', 'France'];
+  String? _selectedCountry;
+
+  final _nameFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+  final _passFocus = FocusNode();
+  final _confirmPassFocus = FocusNode();
+
   @override
   void dispose() {
     super.dispose();
@@ -28,6 +36,16 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
     _storyController.dispose();
     _passController.dispose();
     _confirmPassController.dispose();
+    _nameFocus.dispose();
+    _phoneFocus.dispose();
+    _passFocus.dispose();
+    _confirmPassFocus.dispose();
+  }
+
+  void _fieldFocusChange(
+      BuildContext context, FocusNode currentFocus, FocusNode nextFocus) {
+    currentFocus.unfocus();
+    FocusScope.of(context).requestFocus(nextFocus);
   }
 
   @override
@@ -43,6 +61,11 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
           padding: const EdgeInsets.all(16.0),
           children: [
             TextFormField(
+              focusNode: _nameFocus,
+              autofocus: true,
+              onFieldSubmitted: (_) {
+                _fieldFocusChange(context, _nameFocus, _phoneFocus);
+              },
               controller: _nameController,
               decoration: InputDecoration(
                 labelText: 'Full Name *',
@@ -73,6 +96,10 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
               height: 10,
             ),
             TextFormField(
+              focusNode: _phoneFocus,
+              onFieldSubmitted: (_) {
+                _fieldFocusChange(context, _phoneFocus, _passFocus);
+              },
               controller: _phoneController,
               decoration: InputDecoration(
                 labelText: 'Phone Number *',
@@ -137,6 +164,32 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
               validator: _validateEmail,
             ),
             const SizedBox(
+              height: 10,
+            ),
+            DropdownButtonFormField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                icon: Icon(Icons.flag),
+                labelText: 'Country?',
+              ),
+              items: _countries.map((country) {
+                return DropdownMenuItem(
+                  value: country,
+                  child: Text(country),
+                );
+              }).toList(),
+              onChanged: (data) {
+                print(data);
+                setState(() {
+                  _selectedCountry = data;
+                });
+              },
+              value: _selectedCountry,
+              validator: (val) {
+                return (val == null) ? 'Please selected country' : null;
+              },
+            ),
+            const SizedBox(
               height: 20,
             ),
             TextFormField(
@@ -156,6 +209,10 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
               height: 10,
             ),
             TextFormField(
+              focusNode: _passFocus,
+              onFieldSubmitted: (_) {
+                _fieldFocusChange(context, _passFocus, _confirmPassFocus);
+              },
               controller: _passController,
               obscureText: _hidePass,
               maxLength: 8,
@@ -179,6 +236,7 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
               height: 10,
             ),
             TextFormField(
+              focusNode: _confirmPassFocus,
               controller: _confirmPassController,
               obscureText: _hidePass,
               maxLength: 8,
@@ -202,7 +260,18 @@ class _RegisterFormPageState extends State<RegisterFormPage> {
                   print('Email: ${_emailController.text}');
                   print('Story: ${_storyController.text}');
                 } else {
-                  print('Form is not valid/ Please review and correct');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: Colors.red,
+                      content: Text(
+                        'Form is not valid! Please review and correct.',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(
